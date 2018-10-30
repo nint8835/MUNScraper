@@ -39,17 +39,31 @@ def scrape_courses(url: str, prefix: str) -> List[Course]:
         c.prefix = prefix
         c.number = _process_basic_tag(children[0])
         c.name = _process_basic_tag(children[1])
+        c.requirements = []
 
         for tag in div.find_all("p", class_="courseAttrs"):
             if "PR: " not in tag.contents[0]:
                 continue
             pr = tag.text.replace("\n", "").replace("\t", "").replace(", and ", ", ").replace(" and ", ", ").replace("; ", ", ")
             pr = pr.replace(";,", ",").replace(", or ", ", ").replace(" or ", ", ").replace("the former ", "")
-            pr = pr.replace(" (or equivalent)", "")
+            pr = pr.replace(" (or equivalent)", "").replace("PR: ", "").split(".")[0]
 
             for k, v in PREFIXES.items():
                 pr = pr.replace(v, k)
-            print(pr)
+
+            if pr.split(" ")[0] not in PREFIXES:
+                continue
+            
+            pr_unprocessed = pr.split(", ")
+            for index, prc in enumerate(pr_unprocessed):
+                components = prc.split(" ")
+                if len(components) == 1:
+                    components.append(components[0])
+                    components[0] = pr_unprocessed[index - 1].split(" ")[0]
+                if components[0] not in PREFIXES:
+                    break
+                
+                c.requirements.append(components[0] + components[1])
 
         courses[c.number] = c
     return courses
