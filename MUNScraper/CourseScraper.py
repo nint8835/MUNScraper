@@ -21,13 +21,13 @@ class Course(object):
     requirements: List[str] = []
 
     def __repr__(self):
-        return f"{self.prefix}{self.number}: {self.name}"
+        return f"{self.prefix}{self.number}"
 
 def _process_basic_tag(tag) -> str:
     return tag.contents[0].replace("\n", "").replace("\t", "")
 
 def scrape_courses(url: str, prefix: str) -> List[Course]:
-    courses = {}
+    courses = []
 
     content = requests.get(url).text
     soup = BeautifulSoup(content)
@@ -46,7 +46,7 @@ def scrape_courses(url: str, prefix: str) -> List[Course]:
                 continue
             pr = tag.text.replace("\n", "").replace("\t", "").replace(", and ", ", ").replace(" and ", ", ").replace("; ", ", ")
             pr = pr.replace(";,", ",").replace(", or ", ", ").replace(" or ", ", ").replace("the former ", "")
-            pr = pr.replace(" (or equivalent)", "").replace("PR: ", "").split(".")[0]
+            pr = pr.replace(" (or equivalent)", "").replace(" and ", ", ").replace("PR: ", "").split(".")[0]
 
             for k, v in PREFIXES.items():
                 pr = pr.replace(v, k)
@@ -65,5 +65,5 @@ def scrape_courses(url: str, prefix: str) -> List[Course]:
                 
                 c.requirements.append(components[0] + components[1])
 
-        courses[c.number] = c
+        courses.append(c)
     return courses
